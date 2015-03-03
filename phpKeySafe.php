@@ -26,22 +26,66 @@
 	 * permits a read of any files previously written.
 	 */
 
-	class phpKeySafe {
+	final class phpKeySafe {
 		private $_keyDir;
 		private $_cache;
 		
+		
+		/**
+		 * Construct, this will give you the base object you need to operate with.
+		 * 
+		 * Recent changes to improve path detection and reduce risk of... breakage.
+		 * 
+		 * @param path $KeyDir
+		 * @throws Exception
+		 */
+		
 		public function __construct($KeyDir = NULL) {
+			
 			if ( !function_exists('json_decode') ) {
 				throw new Exception('ERR: You do not appear to have function.json_decode activated in PHP ini');
 			}
-			if ( !isset($KeyDir) ||  !is_dir($KeyDir) || !is_readable($KeyDir) ) {
-				throw new Exception('ERR: Not able to read/write to that file/directory' . $KeyDir);
+			
+			if ( strlen($KeyDir) > 0 ) {
+				$rootParts = explode('/',$KeyDir);
+				// Just incase there is crap at the end.
+				while ( !@end($rootParts) && @count($rootParts) > 0 ) {
+					@array_pop($rootParts);
+				}
+				if ( strlen($rootParts[0]) > 0 ) {
+					// Then we can assume that the first part was not a /, if it isn't, then it's relative.
+					$curDir = cwd() . '/';
+					foreach ( $rootParts as $rootPart ) {
+						$theString = @ereg_replace("[^A-Za-z0-9\.\-\_]", "", $rootPart);
+						$curDir .= $theString . '/';
+					}
+				}
+				else {
+					$curDir = '';
+					foreach ( $rootParts as $rootPart ) {
+						$theString = @ereg_replace("[^A-Za-z0-9\.\-\_]", "", $rootPart);
+						$curDir .= $theString . '/';
+					}
+				}
+				$cleanRoot = $curDir;
 			}
-			else {
-				$this->_keyDir = $KeyDir;
+			
+			if ( strlen($cleanRoot) < 1 || $cleanRoot == FALSE || !isset($cleanRoot) ) {
+				throw new Exception('ERR: Not able to read/write to that file/directory' . $cleanRoot);
 			}
+			elseif ( is_dir($cleanRoot) ) {
+				$this->_keyRoot = $cleanRoot;
+				return true;
+			} throw new Exception('ERR: Not able to read/write to that file/directory' . $cleanRoot);
 		}
 		
+		/**
+		 * 
+		 * getKey will go into the keyfile and fetch the pair you are looking for.
+		 * 
+		 * @throws Exception
+		 * @return Varies
+		 */
 		public function getKey() {
 			// It was proposed to add strict var definitions in the function. Contemplating it.
 			$Args = func_get_args();
