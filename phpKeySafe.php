@@ -70,7 +70,7 @@
 				$cleanRoot = $curDir;
 			}
 			
-			if ( strlen($cleanRoot) < 1 || $cleanRoot == FALSE || !isset($cleanRoot) ) {
+			if ( strlen($cleanRoot) < 1 || $cleanRoot == FALSE || !isset($cleanRoot) || !is_readable($cleanRoot) ) {
 				throw new Exception('ERR: Not able to read/write to that file/directory' . $cleanRoot);
 			}
 			elseif ( is_dir($cleanRoot) ) {
