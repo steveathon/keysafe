@@ -56,14 +56,14 @@
 					// Then we can assume that the first part was not a /, if it isn't, then it's relative.
 					$curDir = cwd() . '/';
 					foreach ( $rootParts as $rootPart ) {
-						$theString = @ereg_replace("[^A-Za-z0-9\.\-\_]", "", $rootPart);
+						$theString = @ereg_replace("[^A-Za-z0-9\.\-\_\ ]", "", $rootPart);
 						$curDir .= $theString . '/';
 					}
 				}
 				else {
 					$curDir = '';
 					foreach ( $rootParts as $rootPart ) {
-						$theString = @ereg_replace("[^A-Za-z0-9\.\-\_]", "", $rootPart);
+						$theString = @ereg_replace("[^A-Za-z0-9\.\-\_\ ]", "", $rootPart);
 						$curDir .= $theString . '/';
 					}
 				}
