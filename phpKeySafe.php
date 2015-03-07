@@ -67,6 +67,8 @@
 						$curDir .= $theString . '/';
 					}
 				}
+				// Convert spaces to readable pattern
+				$curDir = str_replace(" ", "\x20",$curDir);
 				$cleanRoot = $curDir;
 			}
 			
@@ -74,7 +76,7 @@
 				throw new Exception('ERR: Not able to read/write to that file/directory' . $cleanRoot);
 			}
 			elseif ( is_dir($cleanRoot) ) {
-				$this->_keyRoot = $cleanRoot;
+				$this->_keyDir = $cleanRoot;
 				return true;
 			} throw new Exception('ERR: Not able to read/write to that file/directory' . $cleanRoot);
 		}
@@ -92,7 +94,7 @@
 			if ( is_array($Args) && @count($Args)>0) {
 				$KeyRequest = @explode('.',$Args[0]);
 				// Check to see if the file exists in the keydir and that the file is readable (new!).
-				if ( file_exists($this->_keyDir . $KeyRequest[0] .'.key' && is_readable($this->_keyDir . $KeyRequest[0] .'.key')) ){
+				if ( file_exists($this->_keyDir . $KeyRequest[0] .'.key') && is_readable($this->_keyDir . $KeyRequest[0] .'.key') ){
 					// Check to see if there is a cache of the request;
 					if ( isset($this->_cache[$KeyRequest[0]]) ) {
 						/* A cache exists in memory, so we should use that.
@@ -123,7 +125,7 @@
 						}
 					}
 				}
-				else {
+				else  {
 					throw new Exception('ERR: The file you requested is not valid '.$this->_keyDir . $KeyRequest[0] .'.key or is unreadable.');
 				}
 			}
