@@ -29,7 +29,7 @@
 	final class phpKeySafe {
 		private $_keyDir;
 		private $_cache;
-		
+		private $_keySuffix;
 		
 		/**
 		 * Construct, this will give you the base object you need to operate with.
@@ -40,10 +40,21 @@
 		 * @throws Exception
 		 */
 		
-		public function __construct($KeyDir = NULL) {
+		public function __construct($KeyDir = NULL,$KeySuffix = NULL) {
 			
 			if ( !function_exists('json_decode') ) {
 				throw new Exception('ERR: You do not appear to have function.json_decode activated in PHP ini');
+			}
+			
+			if ( isset($KeySuffix) ) {
+				$theKeySuffix = @ereg_replace("[^A-Za-z0-9\-\_]", "", $KeySuffix);
+				if ( $KeySuffix == $theKeySuffix ) {
+					$this->_keySuffix = $KeySuffix;
+				} else {
+					throw new Exception('ERR: There is a problem with your key suffix, you provided an invalid character. A-Za-z0-9 - and _ only.');
+				}
+			} else {
+				$this->_keySuffix = 'key'; 
 			}
 			
 			if ( strlen($KeyDir) > 0 ) {
@@ -94,7 +105,7 @@
 			if ( is_array($Args) && @count($Args)>0) {
 				$KeyRequest = @explode('.',$Args[0]);
 				// Check to see if the file exists in the keydir and that the file is readable (new!).
-				if ( file_exists($this->_keyDir . $KeyRequest[0] .'.key') && is_readable($this->_keyDir . $KeyRequest[0] .'.key') ){
+				if ( file_exists($this->_keyDir . $KeyRequest[0] .'.'.$this->_keySuffix ) && is_readable($this->_keyDir . $KeyRequest[0] .'.'.$this->_keySuffix ) ){
 					// Check to see if there is a cache of the request;
 					if ( isset($this->_cache[$KeyRequest[0]]) ) {
 						/* A cache exists in memory, so we should use that.
@@ -104,14 +115,13 @@
 						 */
 						if ( isset($this->_cache[$KeyRequest[0]][$KeyRequest[1]] ) ) {
 							return $this->_cache[$KeyRequest[0]][$KeyRequest[1]];
-						}
-						else {
-							throw new Exception('ERR: Not able to find the key you reqested.');
+						} else {
+							throw new Exception('ERR: Not able to find the key you reqested. Something went bang.');
 						}
 					}
 					else {
 						// Get the contents of the key file and load it into memory.
-						$Data = file_get_contents($this->_keyDir . $KeyRequest[0] .'.key');
+						$Data = file_get_contents($this->_keyDir . $KeyRequest[0] .'.'.$this->_keySuffix );
 						// We use the same var, so we destroy the loaded file and replace it with an object (memory)
 						$Data = json_decode($Data,true);
 						if ( is_array($Data) && @count($Data) > 0 ) {
@@ -120,14 +130,18 @@
 								return $this->_cache[$KeyRequest[0]][$KeyRequest[1]];
 							}
 							else {
-								throw new Exception('ERR: Not able to find the key you reqested.');
+								throw new Exception('ERR: Not able to find the key you reqested. Something went bang.');
 							}
+						} else {
+							throw new Exception('ERR: Not able to find the key you requested. File exists, key not found. ' . __FILE__.'/'.__CLASS__.'/'.__FUNCTION__.':$'. $KeyRequest[0]);
 						}
 					}
 				}
 				else  {
 					throw new Exception('ERR: The file you requested is not valid '.$this->_keyDir . $KeyRequest[0] .'.key or is unreadable.');
 				}
+			}else {
+				throw new Exception('ERR: Not able to find the key you requested.');
 			}
 			return false;
 		}
